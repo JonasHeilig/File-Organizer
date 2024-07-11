@@ -4,7 +4,7 @@ from docx import Document
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/files'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Beschränkung auf 16 MB
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB Limit
 
 
 def safe_join(directory, filename):
@@ -36,7 +36,15 @@ def get_parent_folder(path):
 @app.route('/<path:current_folder>')
 def index(current_folder=''):
     base_folder = app.config['UPLOAD_FOLDER']
-    current_path = os.path.join(base_folder, current_folder)
+
+    if current_folder == '':
+        current_folder = None
+
+    if current_folder is None:
+        current_path = base_folder
+    else:
+        current_path = os.path.join(base_folder, current_folder)
+
     if not os.path.exists(current_path):
         abort(404)
 
@@ -57,7 +65,7 @@ def view_file(current_folder, filename):
         return render_template('view_pdf.html', filename=filename)
     elif filename.lower().endswith('.doc') or filename.lower().endswith('.docx'):
         doc_content = get_document_text(file_path)
-        return render_template('edit_doc.html', filename=filename, doc_content=doc_content)
+        return render_template('view_doc.html', filename=filename, doc_content=doc_content)
     else:
         return send_from_directory(os.path.join(base_folder, current_folder), filename)
 
@@ -65,9 +73,19 @@ def view_file(current_folder, filename):
 @app.route('/edit/<path:current_folder>/<filename>')
 def edit_file(current_folder, filename):
     base_folder = app.config['UPLOAD_FOLDER']
-    file_path = safe_join(os.path.join(base_folder, current_folder), filename)
+
+    if current_folder == '':
+        current_folder = None
+
+    if current_folder is None:
+        current_path = base_folder
+    else:
+        current_path = os.path.join(base_folder, current_folder)
+
+    file_path = safe_join(current_path, filename)
     if not os.path.exists(file_path):
         abort(404)
+
     doc_content = get_document_text(file_path)
     return render_template('edit_doc.html', filename=filename, doc_content=doc_content)
 

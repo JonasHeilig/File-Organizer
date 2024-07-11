@@ -3,14 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dokument bearbeiten</title>
+    <title>Dokument bearbeiten - {{ filename }}</title>
+    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.3/classic/ckeditor.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f2f2f2;
+        }
+        .editor-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .ck.ck-editor {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .save-button {
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>{{ filename }} bearbeiten</h1>
-    <form action="{{ url_for('save_file', filename=filename) }}" method="post">
-        <textarea name="content" rows="20" cols="80">{{ doc_content }}</textarea>
-        <br>
-        <input type="submit" value="Speichern">
+    <div class="editor-container">
+        <textarea name="content" id="editor">{{ doc_content }}</textarea>
+    </div>
+    <script>
+        ClassicEditor
+            .create( document.querySelector( '#editor' ), {
+                toolbar: {
+                    items: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', 'strikethrough', '|',
+                        'fontColor', 'fontBackgroundColor', '|',
+                        'alignment', '|',
+                        'outdent', 'indent', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'blockQuote', 'insertTable', '|',
+                        'link', 'imageUpload', '|',
+                        'undo', 'redo'
+                    ]
+                },
+                language: 'de',
+                image: {
+                    toolbar: [
+                        'imageTextAlternative',
+                        'imageStyle:alignLeft',
+                        'imageStyle:full',
+                        'imageStyle:alignCenter',
+                        'imageStyle:alignRight'
+                    ],
+                    styles: [
+                        'full',
+                        'alignLeft',
+                        'alignCenter',
+                        'alignRight'
+                    ]
+                },
+                table: {
+                    contentToolbar: [
+                        'tableColumn',
+                        'tableRow',
+                        'mergeTableCells'
+                    ]
+                },
+                licenseKey: '',
+            })
+            .then( editor => {
+                window.editor = editor;
+            })
+            .catch( error => {
+                console.error( error );
+            });
+
+        // Form submission handling
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const contentInput = document.querySelector('#content-input');
+            contentInput.value = window.editor.getData();
+            form.submit();
+        });
+    </script>
+    <form action="{{ url_for('save_file', current_folder=current_folder, filename=filename) }}" method="post">
+        <input type="hidden" name="content" id="content-input">
+        <button type="submit" class="save-button">Speichern</button>
     </form>
     <br>
     <a href="{{ url_for('index') }}">Zurück zur Dateiliste</a>
