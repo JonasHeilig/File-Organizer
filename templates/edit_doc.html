@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokument bearbeiten</title>
+</head>
+<body>
+    <h1>{{ filename }} bearbeiten</h1>
+    <form action="{{ url_for('save_file', filename=filename) }}" method="post">
+        <textarea name="content" rows="20" cols="80">{{ doc_content }}</textarea>
+        <br>
+        <input type="submit" value="Speichern">
+    </form>
+    <br>
+    <a href="{{ url_for('index') }}">Zurück zur Dateiliste</a>
+</body>
+</html>

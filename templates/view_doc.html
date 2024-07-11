@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF anzeigen</title>
+    <title>Dokument anzeigen</title>
 </head>
 <body>
     <h1>{{ filename }}</h1>
-    <embed src="{{ url_for('static', filename='files/' + filename) }}" type="application/pdf" width="100%" height="600px" />
+    <div>{{ doc_content|safe }}</div>
     <br>
     <a href="{{ url_for('index') }}">Zurück zur Dateiliste</a>
 </body>
