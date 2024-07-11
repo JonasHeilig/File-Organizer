@@ -1,8 +1,9 @@
-from flask import Flask, render_template, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, abort
 import os
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/pdf'
+app.config['UPLOAD_FOLDER'] = 'static/files'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Beschränkung auf 16 MB
 
 
 def safe_join(directory, filename):
@@ -29,5 +30,22 @@ def view_file(filename):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        return redirect(request.url)
+    if file and (file.filename.lower().endswith('.pdf') or
+                 file.filename.lower().endswith('.doc') or
+                 file.filename.lower().endswith('.docx')):
+        filename = file.filename
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return redirect(url_for('index'))
+    else:
+        return 'Nur PDF, DOC und DOCX Dateien sind erlaubt', 400
+
+
 if __name__ == '__main__':
-    app.run(debug=True, port=6060)
+    app.run(debug=True)
