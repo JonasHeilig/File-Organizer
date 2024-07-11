@@ -52,15 +52,13 @@
                 <li><a href="{{ url_for('index', current_folder=parent_folder) }}">.. (Zurück)</a></li>
             {% endif %}
             {% for folder in folders %}
-                <li><a href="{{ url_for('index', current_folder=folder) }}">{{ folder }}</a></li>
+                <li><a href="{{ url_for('index', current_folder=(current_folder + '/' + folder) if current_folder else folder) }}">{{ folder }}</a></li>
             {% endfor %}
         </ul>
         <h2>Dateien in {{ current_folder }}</h2>
         <ul class="file-list">
             {% for file in files %}
                 <li>
-                    Current Folder: {{ current_folder }}<br>
-                    Filename: {{ file }}<br>
                     <a href="{{ url_for('view_file', current_folder=current_folder, filename=file) }}">{{ file }}</a>
                     <div class="file-actions">
                         {% if file.endswith('.doc') or file.endswith('.docx') %}

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, abort
 import os
 from docx import Document
+from markupsafe import Markup
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/files'
@@ -16,12 +17,12 @@ def safe_join(directory, filename):
 
 def get_document_text(file_path):
     doc = Document(file_path)
-    return '\n'.join([p.text for p in doc.paragraphs])
+    return '<br>'.join([p.text for p in doc.paragraphs])
 
 
 def save_document_text(file_path, content):
     doc = Document()
-    for line in content.split('\n'):
+    for line in content.split('<br>'):
         doc.add_paragraph(line)
     doc.save(file_path)
 
@@ -36,20 +37,13 @@ def get_parent_folder(path):
 @app.route('/<path:current_folder>')
 def index(current_folder=''):
     base_folder = app.config['UPLOAD_FOLDER']
-
-    if current_folder == '':
-        current_folder = None
-
-    if current_folder is None:
-        current_path = base_folder
-    else:
-        current_path = os.path.join(base_folder, current_folder)
+    current_path = os.path.join(base_folder, current_folder)
 
     if not os.path.exists(current_path):
         abort(404)
 
     parent_folder = get_parent_folder(current_folder)
-    folders = [f for f in os.listdir(base_folder) if os.path.isdir(os.path.join(base_folder, f))]
+    folders = [f for f in os.listdir(current_path) if os.path.isdir(os.path.join(current_path, f))]
     files = [f for f in os.listdir(current_path) if os.path.isfile(os.path.join(current_path, f))]
     return render_template('index.html', folders=folders, files=files, current_folder=current_folder,
                            parent_folder=parent_folder)
@@ -65,7 +59,8 @@ def view_file(current_folder, filename):
         return render_template('view_pdf.html', filename=filename)
     elif filename.lower().endswith('.doc') or filename.lower().endswith('.docx'):
         doc_content = get_document_text(file_path)
-        return render_template('view_doc.html', filename=filename, doc_content=doc_content)
+        return render_template('view_doc.html', filename=filename, doc_content=Markup(doc_content),
+                               current_folder=current_folder)
     else:
         return send_from_directory(os.path.join(base_folder, current_folder), filename)
 
@@ -73,21 +68,15 @@ def view_file(current_folder, filename):
 @app.route('/edit/<path:current_folder>/<filename>')
 def edit_file(current_folder, filename):
     base_folder = app.config['UPLOAD_FOLDER']
-
-    if current_folder == '':
-        current_folder = None
-
-    if current_folder is None:
-        current_path = base_folder
-    else:
-        current_path = os.path.join(base_folder, current_folder)
+    current_path = os.path.join(base_folder, current_folder)
 
     file_path = safe_join(current_path, filename)
     if not os.path.exists(file_path):
         abort(404)
 
     doc_content = get_document_text(file_path)
-    return render_template('edit_doc.html', filename=filename, doc_content=doc_content)
+    return render_template('edit_doc.html', filename=filename, doc_content=Markup(doc_content),
+                           current_folder=current_folder)
 
 
 @app.route('/save/<path:current_folder>/<filename>', methods=['POST'])

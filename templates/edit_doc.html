@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dokument bearbeiten - {{ filename }}</title>
-    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.3/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,7 +42,7 @@
     </div>
     <script>
         ClassicEditor
-            .create( document.querySelector( '#editor' ), {
+            .create(document.querySelector('#editor'), {
                 toolbar: {
                     items: [
                         'heading', '|',
@@ -79,21 +79,19 @@
                         'mergeTableCells'
                     ]
                 },
-                licenseKey: '',
             })
-            .then( editor => {
+            .then(editor => {
                 window.editor = editor;
             })
-            .catch( error => {
-                console.error( error );
+            .catch(error => {
+                console.error(error);
             });
 
-        // Form submission handling
         const form = document.querySelector('form');
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             const contentInput = document.querySelector('#content-input');
-            contentInput.value = window.editor.getData();
+            contentInput.value = window.editor.getData().replace(/\n/g, '<br>');
             form.submit();
         });
     </script>
@@ -102,6 +100,6 @@
         <button type="submit" class="save-button">Speichern</button>
     </form>
     <br>
-    <a href="{{ url_for('index') }}">Zurück zur Dateiliste</a>
+    <a href="{{ url_for('index', current_folder=current_folder) }}">Zurück zur Dateiliste</a>
 </body>
 </html>

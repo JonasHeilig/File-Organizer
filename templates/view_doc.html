@@ -9,6 +9,6 @@
     <h1>{{ filename }}</h1>
     <div>{{ doc_content|safe }}</div>
     <br>
-    <a href="{{ url_for('index') }}">Zurück zur Dateiliste</a>
+    <a href="{{ url_for('index', current_folder=current_folder) }}">Zurück zur Dateiliste</a>
 </body>
 </html>
