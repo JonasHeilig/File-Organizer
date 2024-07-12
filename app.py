@@ -1,11 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, abort, jsonify
 import os
+import json
 from docx import Document
 from markupsafe import Markup
+from html2docx import html2docx
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/files'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB Limit
+TAGS_FILE = 'tags.json'
+
+
+def load_tags():
+    if os.path.exists(TAGS_FILE):
+        with open(TAGS_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+
+def save_tags(tags):
+    with open(TAGS_FILE, 'w') as f:
+        json.dump(tags, f)
+
+
+if not os.path.exists(TAGS_FILE):
+    save_tags({})
 
 
 def safe_join(directory, filename):
@@ -22,8 +41,7 @@ def get_document_text(file_path):
 
 def save_document_text(file_path, content):
     doc = Document()
-    for line in content.split('<br>'):
-        doc.add_paragraph(line)
+    html2docx(content, doc)
     doc.save(file_path)
 
 
@@ -45,8 +63,10 @@ def index(current_folder=''):
     parent_folder = get_parent_folder(current_folder)
     folders = [f for f in os.listdir(current_path) if os.path.isdir(os.path.join(current_path, f))]
     files = [f for f in os.listdir(current_path) if os.path.isfile(os.path.join(current_path, f))]
+
+    tags = load_tags()
     return render_template('index.html', folders=folders, files=files, current_folder=current_folder,
-                           parent_folder=parent_folder)
+                           parent_folder=parent_folder, tags=tags)
 
 
 @app.route('/view/<path:current_folder>/<filename>')
@@ -128,6 +148,10 @@ def delete_file(current_folder, filename):
     if not os.path.exists(file_path):
         abort(404)
     os.remove(file_path)
+    tags = load_tags()
+    if filename in tags:
+        del tags[filename]
+        save_tags(tags)
     return redirect(url_for('index', current_folder=current_folder))
 
 
@@ -141,6 +165,25 @@ def move_file(current_folder, filename):
     destination_path = safe_join(os.path.join(base_folder, destination_folder), filename)
     os.rename(file_path, destination_path)
     return redirect(url_for('index', current_folder=current_folder))
+
+
+@app.route('/tags', methods=['POST'])
+def add_tag():
+    filename = request.form['filename']
+    tag = request.form['tag']
+    tags = load_tags()
+    if filename not in tags:
+        tags[filename] = []
+    if tag not in tags[filename]:
+        tags[filename].append(tag)
+    save_tags(tags)
+    return jsonify(tags[filename])
+
+
+@app.route('/tags/<filename>', methods=['GET'])
+def get_tags(filename):
+    tags = load_tags()
+    return jsonify(tags.get(filename, []))
 
 
 if __name__ == '__main__':
