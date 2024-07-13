@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dokument bearbeiten - {{ filename }}</title>
-    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+    <script src="{{ url_for('static', filename='/ckeditor5-42.0.1/ckeditor5/ckeditor5.js') }}"></script>
     <style>
         body {
             font-family: Arial, sans-serif;

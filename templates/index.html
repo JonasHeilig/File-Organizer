@@ -31,6 +31,16 @@
         .file-actions form {
             display: inline;
         }
+        .tag-list {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            background-color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -76,9 +86,46 @@
                             <input type="submit" value="Verschieben">
                         </form>
                     </div>
+                    <div>
+                        <h3>Tags</h3>
+                        <div class="tag-list" id="tags-{{ file }}">
+                            {% for tag in tags.get(file, []) %}
+                                <span class="tag">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        <input type="text" id="tag-input-{{ file }}" placeholder="Tag hinzufügen">
+                        <button onclick="addTag('{{ file }}')">Hinzufügen</button>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
     </div>
+    <script>
+        function addTag(filename) {
+            const input = document.getElementById(`tag-input-${filename}`);
+            const tag = input.value.trim();
+            if (tag) {
+                fetch('/tags', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filename, tag })
+                })
+                .then(response => response.json())
+                .then(tags => {
+                    const tagList = document.getElementById(`tags-${filename}`);
+                    tagList.innerHTML = '';
+                    tags.forEach(t => {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'tag';
+                        tagElement.textContent = t;
+                        tagList.appendChild(tagElement);
+                    });
+                    input.value = '';
+                });
+            }
+        }
+    </script>
 </body>
 </html>

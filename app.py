@@ -169,8 +169,9 @@ def move_file(current_folder, filename):
 
 @app.route('/tags', methods=['POST'])
 def add_tag():
-    filename = request.form['filename']
-    tag = request.form['tag']
+    data = request.json
+    filename = data['filename']
+    tag = data['tag']
     tags = load_tags()
     if filename not in tags:
         tags[filename] = []
