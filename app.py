@@ -187,5 +187,31 @@ def get_tags(filename):
     return jsonify(tags.get(filename, []))
 
 
+@app.route('/download')
+@app.route('/download/<path:current_folder>')
+def download(current_folder=''):
+    base_folder = app.config['UPLOAD_FOLDER']
+    current_path = os.path.join(base_folder, current_folder)
+
+    if not os.path.exists(current_path):
+        abort(404)
+
+    parent_folder = get_parent_folder(current_folder)
+    folders = [f for f in os.listdir(current_path) if os.path.isdir(os.path.join(current_path, f))]
+    files = [f for f in os.listdir(current_path) if os.path.isfile(os.path.join(current_path, f))]
+
+    return render_template('download.html', folders=folders, files=files, current_folder=current_folder,
+                           parent_folder=parent_folder)
+
+
+@app.route('/download_file/<path:current_folder>/<filename>')
+def download_file(current_folder, filename):
+    base_folder = app.config['UPLOAD_FOLDER']
+    file_path = safe_join(os.path.join(base_folder, current_folder), filename)
+    if not os.path.exists(file_path):
+        abort(404)
+    return send_from_directory(os.path.join(base_folder, current_folder), filename, as_attachment=True)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
